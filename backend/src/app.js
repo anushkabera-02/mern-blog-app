@@ -38,7 +38,8 @@ app.get("/", (_req, res) => {
   });
 });
 
-// API Routes
+// API Routes (supports /api/v1 as per textbook instructions and /api)
+app.use("/api/v1", postRoutes);
 app.use("/api", postRoutes);
 
 // Catch-all 404 & Global Error Handling

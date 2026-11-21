@@ -1,7 +1,7 @@
 import axios from "axios";
 
-// In production, VITE_API_URL can point to Google Cloud Run backend or relative /api
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+// Supports VITE_BACKEND_URL (from textbook instructions), VITE_API_URL, or relative /api
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

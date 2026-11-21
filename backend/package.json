@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --forceExit --runInBand",
-    "lint": "eslint src/ tests/"
+    "lint": "eslint src/ tests/",
+    "seed": "node src/seed.js"
   },
   "keywords": ["mern", "express", "mongodb", "docker", "cloud-run"],
   "author": "B.Tech CSIT",

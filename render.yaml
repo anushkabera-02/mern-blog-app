@@ -1,0 +1,50 @@
+# ========================================================
+# Render Blueprint Specification (render.yaml)
+# Free Platform Deployment for MERN Stack Blog Application
+# No Credit Card Required - 100% Free Tier Services
+# ========================================================
+services:
+  # --------------------------------------------------------
+  # 1. Express Backend Web Service (Free Tier)
+  # --------------------------------------------------------
+  - type: web
+    name: mern-blog-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGO_URI
+        sync: false # Set in Render dashboard (e.g., MongoDB Atlas connection string)
+      - key: DATABASE_URL
+        fromService:
+          type: web
+          name: mern-blog-backend
+          envVarKey: MONGO_URI
+      - key: CLIENT_ORIGIN
+        value: "*"
+
+  # --------------------------------------------------------
+  # 2. React Vite Frontend Static Site (Free Tier)
+  # --------------------------------------------------------
+  - type: web
+    name: mern-blog-frontend
+    runtime: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_BACKEND_URL
+        value: https://mern-blog-backend.onrender.com/api/v1
+      - key: VITE_API_URL
+        value: https://mern-blog-backend.onrender.com/api

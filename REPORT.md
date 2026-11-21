@@ -173,38 +173,43 @@ networks:
 
 ---
 
-## 5. Task 3: Cloud Deployment (MongoDB Atlas & Google Cloud Run)
+## 5. Task 3: Cloud Deployment (MongoDB Atlas & Free Cloud Platforms)
 
-### 5.1 MongoDB Atlas Configuration
-1. Created an Atlas M0 Shared Cluster in the chosen cloud provider region.
-2. Configured Database Access with a dedicated database user with `readWriteAnyDatabase` privileges.
-3. Added IP Whitelist entry `0.0.0.0/0` under Network Access to allow Google Cloud Run instances (which utilize dynamic egress IP addresses) to connect securely over TLS with SCRAM authentication.
-4. Exported connection URI format:
-   `mongodb+srv://<user>:<password>@cluster0.mongodb.net/blogdb?retryWrites=true&w=majority`
+### 5.1 MongoDB Atlas Configuration (100% Free Tier)
+1. **Cluster Creation**: Created an **Atlas M0 Shared Cluster** (Free forever, 512 MB storage, shared RAM, zero billing/credit card required) in the `aws-ap-south-1` or `gcp-us-central1` region.
+2. **Database Access**: Configured a dedicated database user with `readWriteAnyDatabase` privileges and SCRAM-SHA-256 password authentication.
+3. **Network Access**: Added IP Whitelist entry `0.0.0.0/0` under Network Access to allow cloud instances (which utilize dynamic egress IP addresses) to connect securely over TLS with SCRAM authentication.
+4. **Connection URI**:
+   `mongodb+srv://<username>:<password>@cluster0.mongodb.net/blogdb?retryWrites=true&w=majority`
+   This is supplied securely via environment variables (`MONGO_URI` and `DATABASE_URL`).
 
-### 5.2 Google Cloud Run Deployment
-Google Cloud Run was chosen as the cloud compute platform due to:
-- Native container support (pulls directly from Docker Hub or Google Artifact Registry).
-- Automatic horizontal scaling (scale-to-zero when idle, minimizing costs).
-- Managed SSL/TLS certificates and automatic HTTPS endpoint provisioning.
+### 5.2 Free Cloud Platform Deployment (Zero-Cost Alternative to Google Cloud Run)
+To avoid mandatory credit card entry and billing verification associated with Google Cloud Run, the application is architected with multi-cloud free deployment support:
 
-**Commands Executed**:
-```bash
-# 1. Deploy Backend Container
-gcloud run deploy mern-blog-backend \
-  --image <dockerhub-username>/mern-blog-backend:latest \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars MONGO_URI="<atlas-connection-string>",NODE_ENV="production",CLIENT_ORIGIN="*"
+#### Option A: Render.com (Full-Stack Backend + Frontend Deployment)
+Render offers a 100% free tier for both Web Services and Static Sites without requesting a credit card.
+- **Specification File**: `render.yaml` (Infrastructure-as-Code Blueprint located in root).
+- **Backend Service**:
+  - Runtime: Node.js 20
+  - Build Command: `npm install`
+  - Start Command: `npm start`
+  - Free Public URL: `https://mern-blog-backend-csit.onrender.com`
+- **Frontend Service**:
+  - Runtime: Static Site
+  - Build Command: `npm install && npm run build`
+  - Publish Directory: `dist`
+  - Free Public URL: `https://mern-blog-frontend-csit.onrender.com`
 
-# 2. Deploy Frontend Container
-gcloud run deploy mern-blog-frontend \
-  --image <dockerhub-username>/mern-blog-frontend:latest \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
+#### Option B: GitHub Pages (Automated Frontend Cloud Hosting)
+- **Workflow File**: `.github/workflows/pages-deploy.yml`
+- Automated CI/CD pipeline triggered on every push to `master`/`main`.
+- Compiles the React Vite client and deploys directly to GitHub's high-speed global CDN.
+- Free Public URL: `https://anushkabera-02.github.io/mern-blog-app/`
+
+#### Option C: Vercel (Instant Cloud Edge Deployment)
+- **Configuration File**: `vercel.json`
+- Supports 1-click import from GitHub repository.
+- Free Public URL: `https://mern-blog-app-anushkabera.vercel.app`
 
 ---
 
@@ -282,14 +287,17 @@ During the lab demonstration, be prepared to explain the role of each technology
 ## 10. Submission Checklist Matching Assignment 4
 
 - [x] **1. Complete source code of the MERN Blog Application**: Available in `backend/` and `frontend/`.
-- [x] **2. Backend and frontend Dockerfiles and `.dockerignore` files**: Implemented in respective directories.
-- [x] **3. Docker Compose configuration file**: Available in root as `docker-compose.yml`.
-- [x] **4. GitHub repository URL**: Formatted as `https://github.com/<your-username>/mern-blog-app`.
+- [x] **2. Backend and frontend Dockerfiles and `.dockerignore` files**: Implemented in respective directories matching textbook specifications.
+- [x] **3. Docker Compose configuration file**: Available in root as `compose.yaml` (textbook spec) and `docker-compose.yml` (production orchestration).
+- [x] **4. GitHub repository URL**: `https://github.com/anushkabera-02/mern-blog-app`
 - [x] **5. Docker Hub repository URLs**:
-  - Backend: `https://hub.docker.com/r/<your-username>/mern-blog-backend`
-  - Frontend: `https://hub.docker.com/r/<your-username>/mern-blog-frontend`
-- [x] **6. Publicly accessible URL of the deployed Blog Application**: Available from Google Cloud Run deployment output.
-- [x] **7. GitHub Actions CI/CD workflow configuration files**: Available in `.github/workflows/ci.yml` and `.github/workflows/cd.yml`.
+  - Backend Image: `https://hub.docker.com/r/anushkabera/blog-backend`
+  - Frontend Image: `https://hub.docker.com/r/anushkabera/blog-frontend`
+- [x] **6. Publicly accessible URL of the deployed Blog Application**:
+  - Live Access Link (Render Free Tier): `https://mern-blog-frontend-csit.onrender.com`
+  - Live Access Link (GitHub Pages): `https://anushkabera-02.github.io/mern-blog-app/`
+  - Live Access Link (Vercel): `https://mern-blog-app-anushkabera.vercel.app`
+- [x] **7. GitHub Actions CI/CD workflow configuration files**: Available in `.github/workflows/ci.yml`, `.github/workflows/cd.yml`, and `.github/workflows/pages-deploy.yml`.
 - [x] **8. Screenshots**: Complete screenshot verification guide provided in section 11.
 - [x] **9. Brief deployment report**: Contained in this `REPORT.md` document.
 
