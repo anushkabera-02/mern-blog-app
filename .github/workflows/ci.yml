@@ -1,0 +1,76 @@
+name: Continuous Integration (CI)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ==========================================
+  # Job 1: Backend CI (Linting & Automated Tests)
+  # ==========================================
+  backend-ci:
+    name: Backend CI (Lint & Unit Tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install Backend Dependencies
+        run: npm ci
+
+      - name: Run Backend Code Linter (ESLint)
+        run: npm run lint
+
+      - name: Run Backend Automated Tests (Jest & Supertest)
+        run: npm test
+        env:
+          NODE_ENV: test
+
+  # ==========================================
+  # Job 2: Frontend CI (Linting & Production Build)
+  # ==========================================
+  frontend-ci:
+    name: Frontend CI (Lint & Vite Build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        run: npm ci
+
+      - name: Run Frontend Code Linter (ESLint)
+        run: npm run lint
+
+      - name: Build Frontend Application for Production
+        run: npm run build
+        env:
+          VITE_API_URL: /api
