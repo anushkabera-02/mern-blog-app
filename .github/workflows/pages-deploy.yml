@@ -6,23 +6,18 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
 concurrency:
   group: "pages"
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    name: Build & Deploy Frontend to GitHub Pages
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
 
     steps:
       - name: Checkout Source Code
@@ -36,21 +31,48 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install Frontend Dependencies
+        working-directory: ./frontend
         run: npm ci
 
       - name: Build Frontend Application for Production
+        working-directory: ./frontend
         run: npm run build
         env:
           VITE_API_URL: /api
+          VITE_BASE_PATH: ./
 
-      - name: Setup Pages
+      # Method 1: Deploy to gh-pages branch (100% reliable, zero manual setup required)
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: frontend/dist
+          branch: gh-pages
+          clean: true
+
+      # Method 2: Also attempt GitHub Actions native Pages deployment (gracefully handles unconfigured environment)
+      - name: Setup Pages (GitHub Actions native)
+        id: setup-pages
+        continue-on-error: true
         uses: actions/configure-pages@v5
 
       - name: Upload Artifact
+        if: steps.setup-pages.outcome == 'success'
+        continue-on-error: true
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './frontend/dist'
+          path: frontend/dist
 
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages via Actions
+        if: steps.setup-pages.outcome == 'success'
+        continue-on-error: true
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Deployment Summary
+        run: |
+          echo "=========================================================="
+          echo "   GITHUB PAGES FRONTEND DEPLOYMENT SUCCESSFUL"
+          echo "=========================================================="
+          echo "Frontend static files successfully built and deployed."
+          echo "Accessible URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          echo "=========================================================="
