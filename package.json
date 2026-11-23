@@ -1,0 +1,32 @@
+{
+  "name": "mern-blog-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Containerized MERN Stack Blog Application with Docker, Docker Compose, CI/CD, and Render Deployment",
+  "scripts": {
+    "test": "npm --prefix backend test && npm --prefix frontend test",
+    "test:backend": "npm --prefix backend test",
+    "test:frontend": "npm --prefix frontend test",
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
+    "build": "npm --prefix frontend run build",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:down:clean": "docker compose down -v"
+  },
+  "keywords": [
+    "mern",
+    "docker",
+    "docker-compose",
+    "render",
+    "github-actions",
+    "ci-cd",
+    "react",
+    "express",
+    "mongodb",
+    "tanstack-query"
+  ],
+  "author": "Anushka Bera",
+  "license": "MIT"
+}
