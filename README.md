@@ -189,49 +189,36 @@ npm run build
 
 ---
 
-## ☁️ Cloud Deployment to Google Cloud Run & MongoDB Atlas
+## ☁️ Cloud Deployment to Render.com & MongoDB Atlas
 
-### 1. MongoDB Atlas Setup
+### 1. MongoDB Atlas Setup (100% Free Database Tier)
 1. Create a free M0 cluster at [mongodb.com/atlas](https://www.mongodb.com/atlas).
 2. Under **Database Access**, create a user (e.g. `bloguser` / `<password>`).
-3. Under **Network Access**, allow access from anywhere (`0.0.0.0/0`) for Google Cloud Run container access.
+3. Under **Network Access**, allow access from anywhere (`0.0.0.0/0`) for cloud instances.
 4. Copy the connection URI:
    ```
    mongodb+srv://bloguser:<password>@cluster0.mongodb.net/blogdb?retryWrites=true&w=majority
    ```
 
-### 2. Manual Google Cloud Run Deployment
+### 2. 1-Click Deployment to Render.com (100% Free - No Credit Card Required)
 
-#### Deploy Backend:
-```bash
-# Build and tag image
-docker build -t your-dockerhub-user/mern-blog-backend:latest ./backend
-docker push your-dockerhub-user/mern-blog-backend:latest
+Render natively reads the included `render.yaml` blueprint to provision both backend and frontend:
 
-# Deploy to Cloud Run
-gcloud run deploy mern-blog-backend \
-  --image your-dockerhub-user/mern-blog-backend:latest \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --set-env-vars MONGO_URI="<your-mongodb-atlas-uri>",NODE_ENV="production",CLIENT_ORIGIN="*"
-```
+1. Sign up / Log in to [Render.com](https://render.com) using your GitHub account.
+2. Click **New +** > **Blueprint**.
+3. Connect your repository: `anushkabera-02/mern-blog-app`.
+4. Render will parse `render.yaml` and configure:
+   * **`mern-blog-backend`**: Node.js Web Service (Port 10000).
+   * **`mern-blog-frontend`**: React Vite Static Site with automatic SPA redirect rules.
+5. In the environment variables prompt, enter your `MONGO_URI` from MongoDB Atlas.
+6. Click **Apply**. In 2-3 minutes, you have live HTTPS production URLs!
 
-#### Deploy Frontend:
-```bash
-# Build with Backend Cloud Run URL
-docker build \
-  --build-arg VITE_API_URL="<deployed-backend-url>/api" \
-  -t your-dockerhub-user/mern-blog-frontend:latest ./frontend
-docker push your-dockerhub-user/mern-blog-frontend:latest
-
-# Deploy to Cloud Run
-gcloud run deploy mern-blog-frontend \
-  --image your-dockerhub-user/mern-blog-frontend:latest \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated
-```
+### 3. Alternative 1-Click Frontend Deployment on Vercel
+1. Log in to [Vercel](https://vercel.com) using GitHub.
+2. Click **Add New... > Project** and import `mern-blog-app`.
+3. Vercel automatically detects the included `vercel.json` file.
+4. Set the environment variable: `VITE_API_URL` to your Render backend API URL.
+5. Click **Deploy**.
 
 ---
 

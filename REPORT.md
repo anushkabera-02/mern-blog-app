@@ -238,18 +238,18 @@ The CI pipeline runs automatically on every `push` and `pull_request` to the `ma
 
 File: `.github/workflows/cd.yml`
 
-The CD pipeline triggers automatically when code is committed and merged into the `main` branch:
+The CD pipeline triggers automatically when code is committed and merged into the `main` or `master` branch:
 
-1. **Build & Push Job**:
+1. **Build & Push Job (`build-and-push`)**:
    - Sets up Docker Buildx with GitHub Actions caching (`type=gha`).
-   - Logs in to Docker Hub using encrypted repository secrets (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`).
-   - Generates tags (`latest` and short Git SHA).
-   - Builds and pushes `mern-blog-backend` and `mern-blog-frontend` container images to Docker Hub.
-2. **Cloud Run Deployment Job**:
-   - Authenticates to Google Cloud Platform using a dedicated Service Account key (`GCP_SA_KEY`).
-   - Invokes `google-github-actions/deploy-cloudrun@v2` to deploy `mern-blog-backend` with the production MongoDB Atlas URI.
-   - Retrieves the live backend service URL.
-   - Deploys `mern-blog-frontend` to Cloud Run, exposing the publicly accessible production URL.
+   - Automatically detects whether Docker Hub credentials (`DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`) are configured.
+   - Builds both backend (`mern-blog-backend`) and frontend (`mern-blog-frontend`) Docker images, validating build context and Dockerfile instructions.
+   - Pushes versioned tags (`latest` and short Git SHA) to Docker Hub when credentials are provided.
+
+2. **Cloud Deployment Job (`deploy-to-render`)**:
+   - Deploys the application directly to **Render.com** (zero-credit-card, 100% free cloud platform).
+   - Utilizes Render Deploy Webhooks (`RENDER_BACKEND_DEPLOY_HOOK` and `RENDER_FRONTEND_DEPLOY_HOOK`) or Render's native GitHub integration.
+   - Exposes live HTTPS endpoints for both the backend Express API and the frontend React application.
 
 ---
 
@@ -262,25 +262,25 @@ During the lab demonstration, be prepared to explain the role of each technology
 | **Docker** | Packages the application source, runtime, libraries, system tools, and environment variables into lightweight, immutable container images that execute consistently across all environments. |
 | **Docker Compose** | Multi-container orchestrator that defines service relationships, port mappings, shared bridge networks, persistent storage volumes, and health check dependencies in a declarative YAML file. |
 | **Docker Hub** | Centralized container registry that acts as the intermediate distribution hub between the local/CI build machines and the production cloud environment. |
-| **GitHub Actions** | Event-driven automation server that executes CI (code quality linting, unit testing, bundle verification) and CD (Docker Hub publishing, Cloud Run rollout) upon git events. |
-| **Google Cloud Run** | Fully managed serverless container runtime that abstracts server management, automatically provisions HTTPS, routes traffic, and scales container instances based on incoming HTTP request volume. |
+| **GitHub Actions** | Event-driven automation server that executes CI (code quality linting, unit testing, bundle verification) and CD (Docker Hub publishing, automated cloud rollout) upon git events. |
+| **Render.com / Cloud Platform** | Fully managed cloud container & web service platform that automates SSL/TLS provisioning, continuous deployment from GitHub commits, environment variable configuration, and public routing. |
 
 ---
 
 ## 9. Challenges Encountered & Engineering Solutions
 
-1. **Docker Desktop Daemon in Headless/Windows Environment**:
-   - *Challenge*: The Docker CLI was present, but the underlying Docker daemon was stopped (`pipe/dockerDesktopLinuxEngine`).
-   - *Solution*: Validated the application and test suites in a native Node.js runtime environment first, ensuring 100% test pass rate and clean production builds before containerization.
-2. **React SPA Routing Returning 404 on Refresh in Docker**:
-   - *Challenge*: Directly accessing nested routes like `/posts/:id` or reloading the browser in Nginx returned `404 Not Found`.
-   - *Solution*: Configured `nginx.conf` with `try_files $uri $uri/ /index.html;` to properly fall back to React's client-side router.
+1. **Avoiding Mandatory Cloud Billing / Credit Card Gates (GCP vs Render)**:
+   - *Challenge*: Google Cloud Run mandates active credit card billing verification and project quota enablement, creating barriers for academic submissions.
+   - *Solution*: Adopted **Render.com** and **GitHub Pages / Vercel** as production cloud hosts. Render provides 100% free tier hosting for both Node.js web services and static sites without requiring credit card details, deploying seamlessly via Git repository integration and `render.yaml` blueprints.
+2. **React SPA Routing Returning 404 on Refresh in Cloud & Docker**:
+   - *Challenge*: Directly accessing nested routes like `/posts/:id` or reloading the browser in Nginx or static hosting returned `404 Not Found`.
+   - *Solution*: Configured `nginx.conf` and `render.yaml` with rewrite fallback (`routes: rewrite /* -> /index.html`), ensuring React Router handles client-side routes.
 3. **MongoDB Connectivity Race Condition in Docker Compose**:
    - *Challenge*: The backend container booted faster than MongoDB initialized its database engine, resulting in crash loops.
    - *Solution*: Added a `healthcheck` block to the MongoDB service using `mongosh ping` and configured the backend service with `condition: service_healthy`.
-4. **Dynamic Outbound IPs on Google Cloud Run**:
-   - *Challenge*: Cloud Run uses dynamic egress IPs that cannot be individually whitelisted in MongoDB Atlas.
-   - *Solution*: Configured Atlas Network Access to allow traffic from `0.0.0.0/0` while securing the database with strong SCRAM-SHA-256 user authentication and TLS encryption.
+4. **Dynamic Outbound Cloud IPs with MongoDB Atlas**:
+   - *Challenge*: Cloud platforms (Render, Cloud Run) use dynamic outbound IP addresses that cannot be statically assigned.
+   - *Solution*: Configured MongoDB Atlas Network Access with `0.0.0.0/0` (Allow Access from Anywhere) while enforcing strong SCRAM-SHA-256 user authentication and TLS encryption.
 
 ---
 
