@@ -10,8 +10,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
 
-# Copy source code
+# Copy source code and prebuilt frontend public assets
 COPY src/ ./src/
+COPY public/ ./public/
 
 # Set environment defaults
 ENV NODE_ENV=production
